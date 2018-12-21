@@ -1,0 +1,64 @@
+.outter {
+  padding-left:0px;
+  padding-top:0px;
+  margin-left:0px;
+  margin-top:0px;  
+}
+
+li > ul { /* reply-list */
+  background: brown; 
+  width: 5px;
+  1height: 100%;
+  height: auto; /* li:last-child height:0px*/
+  position: relative;  
+  left: 30px;
+  padding-left: 0px;
+}
+
+.outter > li > ul { /* .firstImg */
+  position: relative;
+  left: 10px;
+}
+
+li:last-child {
+  height: 0px;
+}
+
+li {
+  display: block;
+  padding-top: 10px; /* from .firstReply li */
+  width: 400px;
+  clear: left; /* cmnt-box float*/
+}
+
+div {
+  1border-color: blue;
+  1border-style: solid;
+}
+
+.holine {
+  float:left;
+  background: brown;
+  height: 5px;
+  width: 20px;
+}
+
+img {
+  z-index: 1;
+  position:relative;
+  
+  float: left;
+  width: 20px;
+  height: 20px;
+  border-color: orange;
+  border-style: solid;  
+}
+
+.cmnt-box {
+  float: left;
+  margin-left: 10px;  
+}
+
+#inputReply {
+  visibility: hidden;
+}
