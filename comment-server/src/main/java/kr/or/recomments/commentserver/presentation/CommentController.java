@@ -26,28 +26,22 @@ public class CommentController {
 	public CommentController(CommentService service) {
 		this.service = service;
 	}
-	
+
 	@GetMapping
 	Collection<Comment> readList() {
 		log.info("comments searched");
 		return service.findAll();
 	}
-	
+
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	Comment create(@RequestBody Comment comment) {
-		
-		//System.out.println("cmnt:"+ comment.getComment_order() + ", " + comment.getText());
 		log.info("comment creation request: {}", comment);
-		
-		// log.info와 system.out.println차이??
-		//service.create(comment);
-		
-		
+
 		Comment newComment = service.create(comment);
 		log.info("comment created: {}", newComment);
 		return newComment;
-		
+
 	}
-	
+
 }
