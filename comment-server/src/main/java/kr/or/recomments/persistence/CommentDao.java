@@ -21,6 +21,7 @@ import kr.or.recomments.domain.Comment;
 public class CommentDao {
 
 	private static final String SELECT_BY_ORDER = "SELECT MAX(COMMENT_ORDER) from COMMENT where COMMENT_ORDER like :corder and length(COMMENT_ORDER) = :clen";
+	private static final String SELECT_BY_PARENT_ORDER = "SELECT MAX(COMMENT_ORDER) from COMMENT where COMMENT_ORDER like :corder";
 	private static final String SELECT_ALL = "SELECT * FROM COMMENT ORDER BY COMMENT_order";
 
 	private NamedParameterJdbcTemplate jdbc;
@@ -35,6 +36,12 @@ public class CommentDao {
 	public List<Comment> selectAll() {
 		Map<String, Object> params = Collections.emptyMap();
 		return jdbc.query(SELECT_ALL, params, rowMapper);
+	}
+
+	public String selectByParentOrder(String parentOrder) {
+		Map<String, Object> params = new HashMap<>();
+		params.put("corder", parentOrder + "%");
+		return (String) jdbc.queryForObject(SELECT_BY_PARENT_ORDER, params, String.class);
 	}
 
 	public String selectByOrder(String corder) {

@@ -3,18 +3,30 @@ package kr.or.recomments.domain;
 public class Comment {
 	private Integer id;
 	private String text;
-	private String comment_order;
+	private String commentOrder;
 
 	public Comment() {
 	}
 
-	public Comment(String text, String comment_order) {
-		this.text = text;
-		this.comment_order = comment_order;
+	public Comment(String commentOrder) {
+		this.commentOrder = commentOrder;
 	}
 
-	public Comment(Integer id, String text, String comment_order) {
-		this(text, comment_order);
+	public Comment(String text, String commentOrder) {
+		this.text = text;
+		this.commentOrder = commentOrder;
+	}
+
+	public String getCommentOrder() {
+		return commentOrder;
+	}
+
+	public void setCommentOrder(String commentOrder) {
+		this.commentOrder = commentOrder;
+	}
+
+	public Comment(Integer id, String text, String commentOrder) {
+		this(text, commentOrder);
 		this.id = id;
 	}
 
@@ -34,17 +46,9 @@ public class Comment {
 		this.text = text;
 	}
 
-	public String getComment_order() {
-		return comment_order;
-	}
-
-	public void setComment_order(String comment_order) {
-		this.comment_order = comment_order;
-	}
-
 	@Override
 	public String toString() {
-		return "Comment [id=" + id + ", text=" + text + ", comment_order=" + comment_order + "]";
+		return "Comment [id=" + id + ", text=" + text + ", commentOrder=" + commentOrder + "]";
 	}
 
 }

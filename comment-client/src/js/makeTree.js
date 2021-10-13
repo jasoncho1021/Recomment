@@ -3,56 +3,139 @@ document.addEventListener("DOMContentLoaded", function () {
 	sendAJAX(url, dummyMain);
 });
 
-var nxt = 0;
-
-function makeDom(val) {
-	var mem = nxt;
-	var treeNode = document.querySelector("#replyList").innerHTML;
-	var res = "";
-
-	if (mem > 0) {
-		res = "<li>";
-		if (val[mem].comment_order.length == 2) {
-			res = res + treeNode.replace("<div class=\"holine\"></div>", "")
-				.replace("{commentOrder}", val[mem].comment_order)
-				.replace("{id}", val[mem].id)
-				.replace("{content}", val[mem].text);
+function sendAJAX(url, callback) {
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function () {
+		if (this.readyState == 4 && this.status == 200) {
+			callback(JSON.parse(this.response));
 		} else {
-			res = res + treeNode.replace("{commentOrder}", val[mem].comment_order)
-				.replace("{id}", val[mem].id)
-				.replace("{content}", val[mem].text);
+			console.log("ajax failure:" + this.readyState, this.status);
 		}
-		nxt++;
-		while (nxt < val.length) {
-			if (val[mem].comment_order.length + 2 == val[nxt].comment_order.length) {
-				res = res + '<ul>' + makeDom(val) + '</ul>';
-			} else {
+	};
+	xhttp.open("GET", url, true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send();
+}
+
+//var idx;
+function dummyMain(val) {
+
+	/*
+	val.splice(0, 0, {
+		id: "-1",
+		text: "root",
+		commentOrder: ""
+	});
+
+	idx = -1;
+	*/
+
+	console.log(val);
+
+	var leaves = "";
+	for (var node in val) {
+		console.log(val[node]);
+		leaves += makeTree(val[node]);
+	}
+	console.log(leaves);
+
+	var tree = document.createElement("ul");
+	tree.innerHTML = leaves;
+
+	var root = document.querySelector('#outterUl li');
+	root.append(tree);
+
+	console.log("end");
+}
+
+
+function makeTree(val) {
+	var treeNode = document.querySelector("#replyList").innerHTML;
+	var subTree = "";
+
+	subTree = "<li>";
+
+	treeNode = treeNode
+		.replace("{commentOrder}", val.comment.commentOrder)
+		.replace("{id}", val.comment.id)
+		.replace("{content}", val.comment.text);
+
+	subTree += treeNode;
+
+	var arr = val.recomments;
+	if (arr.length > 0) {
+		subTree += '<ul>';
+		for (var node in arr) {
+			console.log("re", arr[node]);
+			subTree += makeTree(arr[node]);
+		}
+		subTree += '</ul>';
+	}
+
+	subTree += "</li>";
+
+	return subTree;
+}
+
+// 00 문자열 고정 포맷, 서버에서 nested JSON 으로 안 주는 경우.해당 함수로 대댓글 구조 생성
+function makeDom(val) {
+	var treeNode = document.querySelector("#replyList").innerHTML;
+	var subTree = "";
+	var len = val[idx].commentOrder.length;
+	var temp = idx;
+	var tagEnd = false;
+
+	if (idx > 0) {
+		subTree = "<li>";
+
+		treeNode = treeNode
+			.replace("{commentOrder}", val[idx].commentOrder)
+			.replace("{id}", val[idx].id)
+			.replace("{content}", val[idx].text);
+
+		subTree = subTree + treeNode;
+
+		idx++;
+		while (idx < val.length) {
+			if (len + 2 == val[idx].commentOrder.length) { // 직계 자식 대댓글 
+				console.log("meet child:", val[temp].commentOrder, val[idx].commentOrder);
+
+				subTree = subTree + '<ul>' + makeDom(val) + '</ul>';
+			} else if (len == val[idx].commentOrder.length) { // 형제들
+				console.log("meet sibling:", val[temp].commentOrder, val[idx].commentOrder);
+
+				subTree += "</li>";
+				tagEnd = true;
+				subTree = subTree + makeDom(val);
+			} else { // 나보다 조상(부모 이상)
+				console.log("meet acester:", val[temp].commentOrder, val[idx].commentOrder);
+
+				if (!tagEnd) {
+					subTree += "</li>";
+					tagEnd = true;
+				}
 				break;
 			}
 		}
-		res += "</li>";
-	} else {
-		nxt++;
-		while (nxt < val.length) {
-			if (val[mem].comment_order.length + 2 == val[nxt].comment_order.length) {
-				res = res + makeDom(val);
-			} else {
-				break;
+
+		if (idx < val.length) {
+			console.log("end loop:", val[temp].commentOrder, val[idx].commentOrder);
+		}
+		if (!tagEnd) {
+			console.log("meet last:", val[temp].commentOrder, idx);
+			subTree += "</li>";
+		}
+
+	} else { // 자기 자신 li 추가 안 한다.
+		idx++;
+		while (idx < val.length) {
+			if (len + 2 == val[idx].commentOrder.length) {
+				subTree = subTree + makeDom(val); // <li></li>..<li></li>
 			}
 		}
 	}
-	return res;
-}
 
-// not connect to server again to drawing new reply
-function addReplyJs(parentli, val) {
-	var template = document.querySelector('#replyList').innerHTML;
-	var resHTML = "<ul><li>";
-	resHTML = resHTML + template.replace('{commentOrder}', val.comment_order)
-		.replace('{id}', val.id)
-		.replace('{content}', val.text);
-	resHTML = resHTML + "</li></ul>";
-	parentli.innerHTML += resHTML;
+	return subTree;
 }
 
 // button, input event bubbling listener
@@ -67,17 +150,6 @@ outter.addEventListener('click', function (evt) {
 		ajax(clickedTarget); // button
 	}
 });
-
-function dummyMain(val) {
-	val.splice(0, 0, {
-		id: "-1",
-		text: "root",
-		comment_order: ""
-	});
-	var root = makeDom(val);
-	var ul = document.querySelector('#outterUl li ul');
-	ul.innerHTML = root;
-}
 
 function ajax(bttn) { //button	
 	var element = bttn; //evt.currentTarget;
@@ -100,20 +172,17 @@ function ajax(bttn) { //button
 	xhttp.setRequestHeader("Content-type", "application/json");
 	xhttp.send(JSON.stringify({
 		text: textInput,
-		comment_order: cmntOrder
+		commentOrder: cmntOrder
 	}));
 }
 
-function sendAJAX(url, callback) {
-	var xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = function () {
-		if (this.readyState == 4 && this.status == 200) {
-			callback(JSON.parse(this.response));
-		} else {
-			console.log("ajax failure:" + this.readyState, this.status);
-		}
-	};
-	xhttp.open("GET", url, true);
-	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	xhttp.send();
+// not connect to server again to drawing new reply
+function addReplyJs(parentli, val) {
+	var template = document.querySelector('#replyList').innerHTML;
+	var resHTML = "<ul><li>";
+	resHTML = resHTML + template.replace('{commentOrder}', val.commentOrder)
+		.replace('{id}', val.id)
+		.replace('{content}', val.text);
+	resHTML = resHTML + "</li></ul>";
+	parentli.innerHTML += resHTML;
 }

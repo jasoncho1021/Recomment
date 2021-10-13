@@ -1,6 +1,6 @@
 package kr.or.recomments.commentserver.presentation;
 
-import java.util.Collection;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import kr.or.recomments.commentserver.service.CommentService;
 import kr.or.recomments.domain.Comment;
+import kr.or.recomments.dto.CommentDTO;
 
 @RestController
 @RequestMapping("/api/comments")
@@ -28,9 +29,10 @@ public class CommentController {
 	}
 
 	@GetMapping
-	Collection<Comment> readList() {
+	List<CommentDTO> readList() {
 		log.info("comments searched");
-		return service.findAll();
+		CommentDTO root = service.findAll();
+		return root.recomments;
 	}
 
 	@PostMapping
