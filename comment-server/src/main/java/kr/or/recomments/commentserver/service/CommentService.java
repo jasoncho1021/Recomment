@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +29,6 @@ public class CommentService {
 		reservedChar.add((int) '_');
 	}
 
-	private int idx;
-	private Map<String, CommentDTO> map;
-
 	public CommentDTO findAll() {
 		Collection<Comment> collection = dao.selectAll();
 
@@ -38,50 +36,70 @@ public class CommentService {
 			comment.setCommentOrder(asciiToDigitOrder(comment.getCommentOrder()));
 		}
 
-		Comment[] commetArray = (Comment[]) collection.toArray(new Comment[collection.size()]);
+		Comment[] commentArray = (Comment[]) collection.toArray(new Comment[collection.size()]);
 
-		String rootOrder = "";
-		CommentDTO root = new CommentDTO(rootOrder);
-
-		map = new HashMap<>();
-		map.put(rootOrder, root);
-
-		idx = -1;
-		makeNested(commetArray, root);
-
-		return root;
+		return makeNestedByLoop(commentArray);
 	}
 
-	private void makeNested(Comment[] list, CommentDTO parentCommentDTO) {
-		idx++;
-		if (idx >= list.length) {
-			return;
-		}
+	private CommentDTO makeNestedByLoop(Comment[] list) {
+		Stack<String> ancestorOrder = new Stack<>();
 
-		Comment comment = list[idx];
-		CommentDTO commentDTO = new CommentDTO(comment);
-		map.put(comment.getCommentOrder(), commentDTO);
+		String parentOrder = "";
+		CommentDTO root = new CommentDTO(parentOrder);
 
-		String parentOrder = parentCommentDTO.comment.getCommentOrder();
+		Map<String, CommentDTO> map = new HashMap<>();
+		map.put(parentOrder, root);
+
+		int len = list.length;
+		Comment comment;
+		CommentDTO parentDTO, childDTO;
 		String childOrder;
-		while (idx < list.length) {
+
+		for (int idx = 0; idx < len; idx++) {
 			comment = list[idx];
-			childOrder = comment.getCommentOrder();
+
+			childDTO = new CommentDTO(comment);
+			childOrder = childDTO.comment.getCommentOrder();
+			map.put(childOrder, childDTO);
+
 			if (parentOrder.length() > childOrder.length()) {
-				return;
+				parentOrder = backTracking(ancestorOrder, parentOrder, childOrder, map);
 			} else {
 				String sib = childOrder.substring(0, parentOrder.length());
 				if (parentOrder.equals(sib)) {
-					CommentDTO parentDTO = map.get(parentOrder);
-					CommentDTO childDTO = map.get(childOrder);
+					parentDTO = map.get(parentOrder);
+					childDTO = map.get(childOrder);
 					parentDTO.recomments.add(childDTO);
-					makeNested(list, childDTO);
+
+					ancestorOrder.push(parentOrder);
+					parentOrder = childOrder;
 				} else {
-					return;
+					parentOrder = backTracking(ancestorOrder, parentOrder, childOrder, map);
 				}
 			}
 		}
-		return;
+
+		return map.get("");
+	}
+
+	private String backTracking(Stack<String> ancestorOrder, String parentOrder, String childOrder,
+			Map<String, CommentDTO> map) {
+		while (!ancestorOrder.isEmpty()) {
+			parentOrder = ancestorOrder.pop();
+			if (parentOrder.length() > childOrder.length()) {
+				continue;
+			}
+			String sib = childOrder.substring(0, parentOrder.length());
+			if (parentOrder.equals(sib)) {
+				break;
+			}
+		}
+
+		CommentDTO parentDTO = map.get(parentOrder);
+		CommentDTO childDTO = map.get(childOrder);
+		parentDTO.recomments.add(childDTO);
+		ancestorOrder.push(parentOrder);
+		return childOrder;
 	}
 
 	private String asciiToDigitOrder(String commentOrder) {
@@ -101,7 +119,7 @@ public class CommentService {
 
 	public Comment create(Comment comment) {
 		log.info("comment: {}", comment);
-		
+
 		if ("".equals(comment.getCommentOrder())) { // 원글 댓글.
 			String sibling = dao.selectByParentOrder("");
 			if (sibling == null) {
@@ -137,8 +155,8 @@ public class CommentService {
 			if ("".equals(sibling)) { // 첫 대댓글. 
 				sibling = "-1";
 			} else {
-				int idx = sibling.indexOf("/",1);
-				if(idx > -1) {
+				int idx = sibling.indexOf("/", 1);
+				if (idx > -1) {
 					sibling = sibling.substring(1, idx);
 				} else {
 					sibling = sibling.substring(1, sibling.length());
