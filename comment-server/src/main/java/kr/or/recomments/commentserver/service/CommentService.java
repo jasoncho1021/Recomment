@@ -108,6 +108,7 @@ public class CommentService {
 				sibling = "-1";
 			} else {
 				sibling = asciiToDigitOrder(sibling);
+				log.info("root sibling: {}", sibling);
 				int idx = sibling.indexOf("/");
 				if (idx > -1) { // 대댓글 달린 원댓글.
 					sibling = sibling.substring(0, idx);
