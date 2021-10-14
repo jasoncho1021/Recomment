@@ -15,6 +15,6 @@
 
 ![Screenshot from 2021-10-14 19-46-54](https://user-images.githubusercontent.com/12610035/137303132-7caaadfc-1272-4126-8b2f-ddd2ecc5e3d9.png)  
 
-* 서버에서 nested JSON 생성하여 응답  
+* 서버에서 nested JSON 생성하여 응답(재귀 아닌 stack 이용한 반복문으로 구현)  
 
 ![Screenshot from 2021-10-14 19-43-49](https://user-images.githubusercontent.com/12610035/137302730-fbebff53-6519-40ce-a1b1-f49de1390bfd.png)  
